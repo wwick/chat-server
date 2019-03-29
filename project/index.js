@@ -15,7 +15,7 @@ io.on('connection', function(socket) {
   });
 
   socket.on('join room', function(room) {
-    socket.leaveAll;
+    socket.leaveAll();
     socket.join(room);
   });
 });
