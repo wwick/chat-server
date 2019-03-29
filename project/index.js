@@ -6,9 +6,17 @@ app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
 });
 
-io.on('connection', function(socket){
+io.on('connection', function(socket) {
+
+  socket.join('default');
+
   socket.on('chat message', function(msg) {
-    io.emit('chat message', msg);
+    io.to(msg.room).emit('chat message', msg);
+  });
+
+  socket.on('join room', function(room) {
+    socket.leaveAll;
+    socket.join(room);
   });
 });
 
