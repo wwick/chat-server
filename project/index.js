@@ -18,6 +18,11 @@ io.on('connection', function(socket) {
     socket.leaveAll();
     socket.join(room);
   });
+
+  socket.on('user join', function(msg) {
+    console.log(msg);
+    io.emit('user join', msg);
+  });
 });
 
 server.listen(3000, function(){

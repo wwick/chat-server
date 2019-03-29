@@ -28,12 +28,37 @@
       <form action="" id="message">
         <input id="m" autocomplete="off" /><button>Send</button>
       </form>
+
+      <form id="name" action="">
+          Name: <input type="text" id="username"/><button id="login">Login</button>
+        </form>
+    
       <form action="" id="group">
           <input id="g" autocomplete="off" /><button>Join Group</button>
       </form>
     </div>
 
     <script>
+
+$(function () {
+        const socket = io();
+        $('#name').submit(function(e){
+          e.preventDefault();
+          var username = $('#username').val();
+          socket.emit('user join', {
+            'username':username,
+            'joinMessage': username + " has joined the room",
+          });
+          console.log(username);
+          return false;
+        });
+        socket.on('user join', function (msg){
+          console.log(msg);
+          $('#messages').append($('<li>').text(msg.joinMessage));
+        });
+      });
+
+
       $(function () {
 
         const socket = io();
