@@ -22,51 +22,61 @@
 
   </head>
   <body>
-    <ul id="messages"></ul>
 
-    <div id='inputs'>
-      <form action="" id="message">
-        <input id="m" autocomplete="off" /><button>Send</button>
-      </form>
-
-      <form id="name" action="">
-          Name: <input type="text" id="username"/><button id="login">Login</button>
-        </form>
-    
-      <form action="" id="group">
-          Group Name: <input id="g" autocomplete="off" /> Group Password: <input id="password" autocomplete="off" type="password"/> <button>Group</button>
-      </form>
-      <button id="delete">Delete Room</button>
-    </div>
+    <form id="login">
+        Name: <input type="text" id="username"/><button>Login</button>
+    </form>
 
     <script>
+
+      let $inputs = $("<div>", {id:'inputs'});
+
+      let $message_form = $("<form>", {id:'message'});
+      $message_form.append($("<input>", {type:'text', id:'m'}));
+      $message_form.append($("<button>", {text:'Enter'}));
+
+      let $group = $("<form>", {id:'group'});
+      $group.append($("<input>", {type:'text', id:'g'}));
+      $group.append($("<input>", {type:'password', id:'password'}));
+      $group.append($("<button>", {text:'Group'}));
+
+      let $delete = $("<button>", {id:'delete',text:'Delete Room'});
+      
+      $inputs.append($message_form);
+      $inputs.append($group);
+      $inputs.append($delete);
+
+      let $messages = $("<ul>", {id:'messages'});
       let username = "";
-      $(function () {
+
+      $( "#login" ).submit(function(e) {
+        e.preventDefault();
+        username = $('#username').val();
+        console.log(username);
+        login(username);
+      })
+
+      function login(username) {
 
         const socket = io();
         let room = 'default';
-        //let username = '';
-
-        $('#name').submit(function(e){
-          e.preventDefault();
-          username = $('#username').val();
-          socket.emit('user join', username);
-          console.log(username);
-          return false;
-        });
+        $(document.body).empty();
+        $(document.body).append($messages);
+        $(document.body).append($inputs);
+        socket.emit('user join', username);
         
-        $('#message').submit(function(e) {
+        $( '#message' ).submit(function(e) {
           e.preventDefault();
           socket.emit('chat message', {
             'message':$('#m').val(),
-            'username':'bob',
+            'username':username,
             'room':room
           });
           $('#m').val('');
           return false;
         });
 
-        $('#group').submit(function(e) {
+        $( '#group' ).submit(function(e) {
           e.preventDefault();
           room = $("#g").val();
           password = $('#password').val();
@@ -104,7 +114,7 @@
           });
         });
 
-      });
+      }
     </script>
   </body>
 </html>
