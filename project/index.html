@@ -63,7 +63,11 @@
         $(document.body).empty();
         $(document.body).append($messages);
         $(document.body).append($inputs);
-        socket.emit('user join', username);
+        socket.emit('join room', {
+          'username':username,
+          'name':room,
+          'password':"default"
+        });
         
         $( '#message' ).submit(function(e) {
           e.preventDefault();
@@ -80,11 +84,7 @@
           e.preventDefault();
           room = $("#g").val();
           password = $('#password').val();
-          socket.emit('join room',{
-            'room': room,
-            'password': password,
-            'owner': username
-          });
+          socket.emit('join room', room);
           $("#g").val('');
           return false;
         });
@@ -100,18 +100,17 @@
         
         $('#delete').click(function(e) {
           e.preventDefault();
-          socket.emit('delete room', {
-            'room': room
-          });
+          socket.emit('delete room',room);
         });
 
         socket.on('delete room', function() {
           let message = "You have been returned to the default room";
           room = "default";
           $('#messages').append($('<li>').text(message));
-            socket.emit('join room',{
-            'room': room
-          });
+            socket.emit('join room', {
+              'name':room,
+              'username':username
+            });
         });
 
       }

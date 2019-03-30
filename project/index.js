@@ -1,6 +1,11 @@
 const app = require('express')();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
+let rooms = Array({
+  'name':'default',
+  'password':'default',
+  'users':Array()
+});
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
@@ -8,16 +13,33 @@ app.get('/', function(req, res){
 
 io.on('connection', function(socket) {
 
-  socket.join('default');
+  //socket.join('default');
 
   socket.on('chat message', function(msg) {
     io.to(msg.room).emit('chat message', msg);
   });
 
   socket.on('join room', function(room) {
-    socket.leaveAll();
-    socket.join(room);
-    console.log(room);
+    for (i = 0; i < rooms.length; i++){
+      if (rooms[i].name == room.name){
+        if (rooms[i].password == room.password){
+          rooms[i].users.push(room.username);
+          socket.leaveAll();
+          socket.join(room.name);
+          console.log(room.name);
+          console.log(rooms);
+        } else {
+          return false;
+        }
+      } else {
+        rooms.push({
+          'name':room.name,
+          'password':room.password,
+          'users':Array(username)
+        });
+      }
+    }
+
   });
 
   socket.on('user join', function(username) {
@@ -29,6 +51,8 @@ io.on('connection', function(socket) {
     io.emit('delete room', room)
     console.log("success");
   })
+
+
 });
 
 server.listen(3000, function(){
