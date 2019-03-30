@@ -1,6 +1,7 @@
 const app = require('express')();
 const server = require('http').Server(app);
 const io = require('socket.io')(server);
+const port = 3000;
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
@@ -15,16 +16,17 @@ io.on('connection', function(socket) {
   });
 
   socket.on('join room', function(room) {
+    console.log(room);
     socket.leaveAll();
     socket.join(room);
   });
 
-  socket.on('user join', function(msg) {
-    console.log(msg);
-    io.emit('user join', msg);
+  socket.on('user join', function(username) {
+    console.log(username);
+    io.emit('user join', username);
   });
 });
 
-server.listen(3000, function(){
-  console.log('listening on *:3000');
+server.listen(port, function(){
+  console.log('listening on port ' + port);
 });

@@ -23,7 +23,7 @@
   </head>
   <body>
     <ul id="messages"></ul>
-    
+
     <div id='inputs'>
       <form action="" id="message">
         <input id="m" autocomplete="off" /><button>Send</button>
@@ -40,29 +40,19 @@
 
     <script>
 
-$(function () {
-        const socket = io();
-        $('#name').submit(function(e){
-          e.preventDefault();
-          var username = $('#username').val();
-          socket.emit('user join', {
-            'username':username,
-            'joinMessage': username + " has joined the room",
-          });
-          console.log(username);
-          return false;
-        });
-        socket.on('user join', function (msg){
-          console.log(msg);
-          $('#messages').append($('<li>').text(msg.joinMessage));
-        });
-      });
-
-
       $(function () {
 
         const socket = io();
         let room = 'default';
+        let username = '';
+
+        $('#name').submit(function(e){
+          e.preventDefault();
+          username = $('#username').val();
+          socket.emit('user join', username);
+          console.log(username);
+          return false;
+        });
         
         $('#message').submit(function(e) {
           e.preventDefault();
@@ -85,6 +75,11 @@ $(function () {
 
         socket.on('chat message', function(msg) {
           $('#messages').append($('<li>').text(msg.message));
+        });
+
+        socket.on('user join', function (username){
+          let message = username + " has joined the room";
+          $('#messages').append($('<li>').text(message));
         });
 
       });
