@@ -34,17 +34,18 @@
         </form>
     
       <form action="" id="group">
-          <input id="g" autocomplete="off" /><button>Join Group</button>
+          Group Name: <input id="g" autocomplete="off" /> Group Password: <input id="password" autocomplete="off" type="password"/> <button>Group</button>
       </form>
+      <button id="delete">Delete Room</button>
     </div>
 
     <script>
-
+      let username = "";
       $(function () {
 
         const socket = io();
         let room = 'default';
-        let username = '';
+        //let username = '';
 
         $('#name').submit(function(e){
           e.preventDefault();
@@ -68,7 +69,12 @@
         $('#group').submit(function(e) {
           e.preventDefault();
           room = $("#g").val();
-          socket.emit('join room',room);
+          password = $('#password').val();
+          socket.emit('join room',{
+            'room': room,
+            'password': password,
+            'owner': username
+          });
           $("#g").val('');
           return false;
         });
@@ -80,6 +86,22 @@
         socket.on('user join', function (username){
           let message = username + " has joined the room";
           $('#messages').append($('<li>').text(message));
+        });
+        
+        $('#delete').click(function(e) {
+          e.preventDefault();
+          socket.emit('delete room', {
+            'room': room
+          });
+        });
+
+        socket.on('delete room', function() {
+          let message = "You have been returned to the default room";
+          room = "default";
+          $('#messages').append($('<li>').text(message));
+            socket.emit('join room',{
+            'room': room
+          });
         });
 
       });
