@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Module 6</title>
+    <title>Free Food WashU</title>
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -91,7 +91,6 @@
 
       function login(username) {
         const socket = io();
-        let room = 'default';
         $( '#bottom' ).empty();
         $( '#bottom' ).append($inputs);
         socket.emit('login', {
@@ -100,9 +99,8 @@
         });
 
         socket.emit('join room', {
-          'username':username,
-          'name':room,
-          'password':"default",
+          'name':'default',
+          'password':'default',
           'socket_id':socket_id
         });
         
@@ -110,20 +108,19 @@
           e.preventDefault();
           socket.emit('chat message', {
             'message':$( '#message' ).val(),
-            'username':username,
-            'room':room
+            'socket_id':socket_id,
           });
           $( '#message' ).val('');
         });
 
         $( '#room_form' ).submit(function(e) {
           e.preventDefault();
-          room = $( '#room' ).val();
+          let room = $( '#room' ).val();
           let password = $( '#password' ).val();
           socket.emit('join room', {
             'name':room,
             'password':password,
-            'username':username
+            'socket_id':socket_id
           });
           $( '#room' ).val('');
           $( '#password' ).val('');
@@ -148,12 +145,11 @@
 
         socket.on('delete room', function() {
           let message = "You have been returned to the default room";
-          room = "default";
           $( '#messages' ).append($('<li>').text(message));
-            socket.emit('join room', {
-              'name':room,
-              'username':username
-            });
+          socket.emit('join room', {
+            'name':'default',
+            'socket_id':socket_id
+          });
         });
 
         socket.on('connect', function() {

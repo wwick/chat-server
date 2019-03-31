@@ -17,56 +17,63 @@ app.get('/', function(req, res){
 io.on('connection', function(socket) {
 
   socket.on('chat message', function(msg) {
-    io.to(msg.room).emit('chat message', msg);
+    let room = users_list[msg.socket_id].room;
+    io.to(room).emit('chat message', msg);
   });
 
   socket.on('login', function(credentials) {
-    for (let username in users_list) {
-      if (username == credentials.username) {
-        io.to('$'+credentials.socket_id).emit('login success', false);
-        return false;
-      }
-    }
-    users_list[credentials.username] = credentials.socket_id;
-    io.to('$'+credentials.socket_id).emit('login success', true);
+    users_list[credentials.socket_id] = {
+      'username':credentials.username,
+      'room':'default'
+    };
   });
 
   socket.on('join room', function(room) {
-    for (i = 0; i < rooms.length; i++){
+    let room_exists = false;
+    for (i = 0; i < rooms.length; i++) {
       if (rooms[i].name == room.name){
-        if (rooms[i].password == room.password){
-          //  if (!rooms[i].users.includes(room.username)) {
-            rooms[i].users.push(room.username);
-            socket.leaveAll();
-            socket.join(room.name);
-            console.log(room.name);
-            console.log(rooms);
-          //  }
-        } else {
+        if (rooms[i].password != room.password){
           return false;
+        } else {
+          if (!rooms[i].users.includes(room.socket_id)) {
+            rooms[i].users.push(room.socket_id);
+          }
+          room_exists = true;
         }
-      } else {
-        rooms.push({
-          'name':room.name,
-          'password':room.password,
-          'users':Array(room.username)
-        });
-        socket.leaveAll();
-        socket.join(room.name);
       }
     }
+    if (!room_exists) {
+      rooms.push({
+        'name':room.name,
+        'password':room.password,
+        'users':Array(room.socket_id),
+        'owner':room.socket_id
+      });
+    }
+    socket.leave(users_list[room.socket_id].room);
+    socket.join(room.name);
+    console.log(room.name);
+    console.log(rooms);
 
   });
 
-  socket.on('user join', function(username) {
-    console.log(username);
-    io.emit('user join', username);
-  });
+  // socket.on('user join', function(username) {
+  //   console.log(username);
+  //   io.emit('user join', username);
+  // });
 
   socket.on('delete room', function(room){
-    io.emit('delete room', room)
-    console.log("success");
-  })
+    for (i = 0; i < rooms.length; i++) {
+      if (rooms[i].name == room.name) {
+        if (rooms[i].owner != room.socket_id){
+          return false;
+        } else {
+          io.emit('delete room', room)
+          console.log("success");
+        }
+      }
+    }
+  });
 
 
 });
