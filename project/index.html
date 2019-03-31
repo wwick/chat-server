@@ -6,9 +6,10 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font: 13px Helvetica, Arial; }
-        #inputs { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; } */
-        form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
-        form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+        #inputs { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+        form input { border: 0; padding: 10px; margin: 10px; border: 1px solid black; font-size: 12pt;}
+        button { background: rgb(130, 224, 255); border: none; padding: 14px 16px; cursor: pointer;}
+        label { color:white; padding: 6px}
         #messages { list-style-type: none; margin: 0; padding: 0; }
         #messages li { padding: 5px 10px; }
         #messages li:nth-child(odd) { background: #eee; }
@@ -32,11 +33,14 @@
       let $inputs = $("<div>", {id:'inputs'});
 
       let $message_form = $("<form>", {id:'message'});
+      $message_form.append($("<label>", {text: "Chat: ", for: "m"}))
       $message_form.append($("<input>", {type:'text', id:'m'}));
       $message_form.append($("<button>", {text:'Enter'}));
 
       let $group = $("<form>", {id:'group'});
+      $group.append($("<label>", {text:'Room Name', for:'g'}));
       $group.append($("<input>", {type:'text', id:'g'}));
+      $group.append($("<label>", {text:'Room Password', for:'password'}));
       $group.append($("<input>", {type:'password', id:'password'}));
       $group.append($("<button>", {text:'Group'}));
 
@@ -83,9 +87,14 @@
         $( '#group' ).submit(function(e) {
           e.preventDefault();
           room = $("#g").val();
-          password = $('#password').val();
-          socket.emit('join room', room);
+          let password = $('#password').val();
+          socket.emit('join room', {
+            'name':room,
+            'password':password,
+            'username':username
+          });
           $("#g").val('');
+          $('#password').val('');
           return false;
         });
 

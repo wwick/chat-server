@@ -13,8 +13,6 @@ app.get('/', function(req, res){
 
 io.on('connection', function(socket) {
 
-  //socket.join('default');
-
   socket.on('chat message', function(msg) {
     io.to(msg.room).emit('chat message', msg);
   });
@@ -23,11 +21,13 @@ io.on('connection', function(socket) {
     for (i = 0; i < rooms.length; i++){
       if (rooms[i].name == room.name){
         if (rooms[i].password == room.password){
-          rooms[i].users.push(room.username);
-          socket.leaveAll();
-          socket.join(room.name);
-          console.log(room.name);
-          console.log(rooms);
+           if (!rooms[i].users.includes(room.username)) {
+            rooms[i].users.push(room.username);
+            socket.leaveAll();
+            socket.join(room.name);
+            console.log(room.name);
+            console.log(rooms);
+           }
         } else {
           return false;
         }
@@ -35,8 +35,10 @@ io.on('connection', function(socket) {
         rooms.push({
           'name':room.name,
           'password':room.password,
-          'users':Array(username)
+          'users':Array(room.username)
         });
+        socket.leaveAll();
+        socket.join(room.name);
       }
     }
 
