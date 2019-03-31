@@ -5,14 +5,43 @@
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font: 13px Helvetica, Arial; }
-        #inputs { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
-        form input { border: 0; padding: 10px; margin: 10px; border: 1px solid black; font-size: 12pt;}
-        button { background: rgb(130, 224, 255); border: none; padding: 14px 16px; cursor: pointer;}
-        label { color:white; padding: 6px}
-        #messages { list-style-type: none; margin: 0; padding: 0; }
-        #messages li { padding: 5px 10px; }
-        #messages li:nth-child(odd) { background: #eee; }
+        body {
+          font: 12pt Helvetica, Arial;
+        }
+        #bottom {
+          background: #000;
+          padding: 3px;
+          position: fixed;
+          bottom: 0;
+          width: 100%;
+        }
+        input {
+          border: 0;
+          padding: 10px;
+          margin: 10px;
+          border: 1px solid black;
+        }
+        button {
+          background: rgb(130, 224, 255);
+          border: none; 
+          padding: 14px 16px; 
+          cursor: pointer;
+        }
+        label { 
+          color:white; 
+          padding: 6px
+        }
+        #messages {
+          list-style-type: none;
+          margin: 0;
+          padding: 0;
+        }
+        #messages li {
+          padding: 5px 10px;
+        }
+        #messages li:nth-child(odd) {
+          background: #eee; 
+        }
       </style>
 
     <script
@@ -24,98 +53,98 @@
   </head>
   <body>
 
-    <form id="login">
-        Name: <input type="text" id="username"/><button>Login</button>
-    </form>
+    <ul id="messages"></ul>
+    <div id='bottom'>
+      <form id='login'>
+        <label for="username">Username</label>
+        <input type="text" id="username"/><button>Login</button>
+      </form>
+    </div>
 
     <script>
 
-      let $inputs = $("<div>", {id:'inputs'});
+      let $inputs = $("<div>");
 
-      let $message_form = $("<form>", {id:'message'});
-      $message_form.append($("<label>", {text: "Chat: ", for: "m"}))
-      $message_form.append($("<input>", {type:'text', id:'m'}));
+      let $message_form = $("<form>", {id:'message_form'});
+      $message_form.append($("<label>", {text: "Chat: ", for: "message"}))
+      $message_form.append($("<input>", {type:'text', id:'message'}));
       $message_form.append($("<button>", {text:'Enter'}));
 
-      let $group = $("<form>", {id:'group'});
-      $group.append($("<label>", {text:'Room Name', for:'g'}));
-      $group.append($("<input>", {type:'text', id:'g'}));
-      $group.append($("<label>", {text:'Room Password', for:'password'}));
-      $group.append($("<input>", {type:'password', id:'password'}));
-      $group.append($("<button>", {text:'Group'}));
+      let $room_form = $("<form>", {id:'room_form'});
+      $room_form.append($("<label>", {text:'Room Name', for:'room'}));
+      $room_form.append($("<input>", {type:'text', id:'room'}));
+      $room_form.append($("<label>", {text:'Room Password', for:'password'}));
+      $room_form.append($("<input>", {type:'password', id:'password'}));
+      $room_form.append($("<button>", {text:'Join/Create Room'}));
 
       let $delete = $("<button>", {id:'delete',text:'Delete Room'});
       
       $inputs.append($message_form);
-      $inputs.append($group);
+      $inputs.append($room_form);
       $inputs.append($delete);
 
-      let $messages = $("<ul>", {id:'messages'});
       let username = "";
 
       $( "#login" ).submit(function(e) {
         e.preventDefault();
-        username = $('#username').val();
-        console.log(username);
+        username = $( '#username' ).val();
         login(username);
       })
 
       function login(username) {
-
         const socket = io();
         let room = 'default';
-        $(document.body).empty();
-        $(document.body).append($messages);
-        $(document.body).append($inputs);
+        $( '#bottom' ).empty();
+        $( '#bottom' ).append($inputs);
         socket.emit('join room', {
           'username':username,
           'name':room,
           'password':"default"
         });
         
-        $( '#message' ).submit(function(e) {
+        $( '#message_form' ).submit(function(e) {
           e.preventDefault();
           socket.emit('chat message', {
-            'message':$('#m').val(),
+            'message':$( '#message' ).val(),
             'username':username,
             'room':room
           });
-          $('#m').val('');
-          return false;
+          $( '#message' ).val('');
         });
 
-        $( '#group' ).submit(function(e) {
+        $( '#room_form' ).submit(function(e) {
           e.preventDefault();
-          room = $("#g").val();
-          let password = $('#password').val();
+          room = $( '#room' ).val();
+          let password = $( '#password' ).val();
           socket.emit('join room', {
             'name':room,
             'password':password,
             'username':username
           });
-          $("#g").val('');
-          $('#password').val('');
-          return false;
+          $( '#room' ).val('');
+          $( '#password' ).val('');
         });
 
         socket.on('chat message', function(msg) {
-          $('#messages').append($('<li>').text(msg.message));
+          $( '#messages' ).append($('<li>').text(msg.message));
         });
 
         socket.on('user join', function (username){
           let message = username + " has joined the room";
-          $('#messages').append($('<li>').text(message));
+          $( '#messages' ).append($('<li>').text(message));
         });
         
-        $('#delete').click(function(e) {
+        $( '#delete' ).click(function(e) {
           e.preventDefault();
-          socket.emit('delete room',room);
+          if (room != 'default') {
+            socket.emit('delete room',room);
+          }
         });
 
         socket.on('delete room', function() {
           let message = "You have been returned to the default room";
           room = "default";
-          $('#messages').append($('<li>').text(message));
+          $( '#messages' ).append($('<li>').text(message));
             socket.emit('join room', {
               'name':room,
               'username':username
