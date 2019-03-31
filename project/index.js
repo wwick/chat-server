@@ -4,8 +4,11 @@ const io = require('socket.io')(server);
 let rooms = Array({
   'name':'default',
   'password':'default',
-  'users':Array()
+  'users':Array(),
+  'owner':''
 });
+let users_list = {};
+const port = 3000;
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
@@ -17,17 +20,28 @@ io.on('connection', function(socket) {
     io.to(msg.room).emit('chat message', msg);
   });
 
+  socket.on('login', function(credentials) {
+    for (let username in users_list) {
+      if (username == credentials.username) {
+        io.to('$'+credentials.socket_id).emit('login success', false);
+        return false;
+      }
+    }
+    users_list[credentials.username] = credentials.socket_id;
+    io.to('$'+credentials.socket_id).emit('login success', true);
+  });
+
   socket.on('join room', function(room) {
     for (i = 0; i < rooms.length; i++){
       if (rooms[i].name == room.name){
         if (rooms[i].password == room.password){
-           if (!rooms[i].users.includes(room.username)) {
+          //  if (!rooms[i].users.includes(room.username)) {
             rooms[i].users.push(room.username);
             socket.leaveAll();
             socket.join(room.name);
             console.log(room.name);
             console.log(rooms);
-           }
+          //  }
         } else {
           return false;
         }
@@ -57,6 +71,6 @@ io.on('connection', function(socket) {
 
 });
 
-server.listen(3000, function(){
-  console.log('listening on *:3000');
+server.listen(port, function(){
+  console.log('listening on port ' + port);
 });

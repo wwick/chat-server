@@ -44,10 +44,7 @@
         }
       </style>
 
-    <script
-      src="http://code.jquery.com/jquery-3.3.1.js"
-      integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
-      crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> 
     <script src="/socket.io/socket.io.js"></script>
 
   </head>
@@ -84,6 +81,7 @@
       $inputs.append($delete);
 
       let username = "";
+      let socket_id = "";
 
       $( "#login" ).submit(function(e) {
         e.preventDefault();
@@ -96,10 +94,16 @@
         let room = 'default';
         $( '#bottom' ).empty();
         $( '#bottom' ).append($inputs);
+        socket.emit('login', {
+          'username':username,
+          'socket_id':socket_id
+        });
+
         socket.emit('join room', {
           'username':username,
           'name':room,
-          'password':"default"
+          'password':"default",
+          'socket_id':socket_id
         });
         
         $( '#message_form' ).submit(function(e) {
@@ -127,6 +131,7 @@
 
         socket.on('chat message', function(msg) {
           $( '#messages' ).append($('<li>').text(msg.message));
+          console.log(socket_id);
         });
 
         socket.on('user join', function (username){
@@ -149,6 +154,10 @@
               'name':room,
               'username':username
             });
+        });
+
+        socket.on('connect', function() {
+          socket_id = socket.id;
         });
 
       }
