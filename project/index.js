@@ -96,17 +96,28 @@ io.on('connection', function(socket) {
         'success':false,
         'message':'failed to join ' + room.name
       });
+      console.log(room.password);
 
     }
   });
 
   socket.on('delete room', function(room){
-    for (i = 0; i < rooms.length; i++) {
-      if (rooms[i].name == room.name) {
+    let currentRoom = users_list[room.socket_id].room;
+    if (rooms[currentRoom].owner == room.socket_id){
+      io.to(currentRoom).emit('delete room');
+    }
+  });
+
+  socket.on('kick user', function(room){
+    for (i = 0; i < rooms.length; i++){
+      if(rooms[i].name == room.name) {
         if (rooms[i].owner != room.socket_id){
           return false;
         } else {
-          io.emit('delete room', room)
+          io.emit('kick user', {
+            'room':room.name,
+            'user':room.user
+          });
           console.log("success");
         }
       }

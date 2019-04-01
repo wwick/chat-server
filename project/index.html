@@ -74,10 +74,16 @@
       $room_form.append($("<input>", {type:'password', id:'password'}));
       $room_form.append($("<button>", {text:'Join/Create Room'}));
 
+      let $kick_form = $("<form>", {id:'kick_form'});
+      $kick_form.append($("<label>", {text:"Kick User: ", for: "username"}));
+      $kick_form.append($("<input>", {type:'text', id:'username'}));
+      $kick_form.append($("<button>", {text:"Kick User"}));
+
       let $delete = $("<button>", {id:'delete',text:'Delete Room'});
       
       $inputs.append($message_form);
       $inputs.append($room_form);
+      $inputs.append($kick_form);
       $inputs.append($delete);
 
       let username = "";
@@ -127,11 +133,19 @@
             $( '#password' ).val('');
           });
 
+          $( '#kick_form').submit(function(e) {
+            e.preventDefault();
+            socket.emit('kick_user', {
+              'owner':socket_id,
+              'user':$('username').val()
+            });
+          });
+
           $( '#delete' ).click(function(e) {
             e.preventDefault();
-            if (room != 'default') {
-              socket.emit('delete room',room);
-            }
+              socket.emit('delete room', {
+                "socket_id":socket.id
+              });
           });
 
           socket.on('message', function(message) {
@@ -144,7 +158,8 @@
             $( '#messages' ).append($('<li>').text(message));
             socket.emit('join room', {
               'name':'default',
-              'socket_id':socket_id
+              'password':'',
+              'socket_id':socket.id
             });
           });
 
