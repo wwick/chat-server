@@ -78,8 +78,8 @@
       $room_form.append($("<button>", {text:'Join/Create Room'}));
 
       let $kick_form = $("<form>", {id:'kick_form'});
-      $kick_form.append($("<label>", {text:"Kick User: ", for: "username"}));
-      $kick_form.append($("<input>", {type:'text', id:'username'}));
+      $kick_form.append($("<label>", {text:"Kick User: ", for: "kick_user"}));
+      $kick_form.append($("<input>", {type:'text', id:'kick_user'}));
       $kick_form.append($("<button>", {text:"Kick User"}));
 
       let $ban_form = $("<form>", {id:'ban_form'});
@@ -131,24 +131,42 @@
           $( '#password' ).val('');
         });
 
-        $( '#kick_form').submit(function(e) {
-          e.preventDefault();
+        function kick() {
           socket.emit('kick user', {
-            'user':$('#username').val()
+            'user':$('#kick_user').val()
           });
-        });
+          $('#kick_user').val('');
+        }
 
-        $( '#ban_form').submit(function(e) {
-          e.preventDefault();
+        function ban() {
           socket.emit('ban user', {
             'user':$('#ban_user').val()
           });
-        });
+          $('#ban_user').val('');
+        }
 
-        $( '#delete' ).click(function(e) {
-          e.preventDefault();
-            socket.emit('delete room');
-        });
+        function deleteRoom() {
+          socket.emit('delete room');
+        }
+
+        // $( '#kick_form').submit(function(e) {
+        //   e.preventDefault();
+        //   socket.emit('kick user', {
+        //     'user':$('#username').val()
+        //   });
+        // });
+
+        // $( '#ban_form').submit(function(e) {
+        //   e.preventDefault();
+        //   socket.emit('ban user', {
+        //     'user':$('#ban_user').val()
+        //   });
+        // });
+
+        // $( '#delete' ).click(function(e) {
+        //   e.preventDefault();
+        //   socket.emit('delete room');
+        // });
 
         socket.on('message', function(message) {
           $( '#messages' ).append($('<li>').text(message));
@@ -170,6 +188,9 @@
             $( '#owner_forms' ).remove();
             if (join.is_owner) {
               $( '#bottom' ).append($owner_forms);
+              $( '#kick_form').submit(kick);
+              $( '#ban_form').submit(ban);
+              $( '#delete' ).click(deleteRoom);
             }
           }
           $( '#messages' ).append($('<li>').text(join.message));
