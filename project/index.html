@@ -60,7 +60,8 @@
 
     <script>
 
-      let $inputs = $("<div>");
+      let $input_forms = $("<div>");
+      let $owner_forms = $("<div>");
 
       let $message_form = $("<form>", {id:'message_form'});
       $message_form.append($("<label>", {text: "Chat: ", for: "message"}))
@@ -88,118 +89,99 @@
 
       let $delete = $("<button>", {id:'delete',text:'Delete Room'});
       
-      $inputs.append($message_form);
-      $inputs.append($room_form);
-      $inputs.append($kick_form);
-      $inputs.append($ban_form);
-      $inputs.append($delete);
-
-      let username = "";
-      let socket_id = "";
+      $input_forms.append($message_form);
+      $input_forms.append($room_form);
+      $owner_forms.append($kick_form);
+      $owner_forms.append($ban_form);
+      $owner_forms.append($delete);
 
       $( "#login" ).submit(function(e) {
         e.preventDefault();
-        username = $( '#username' ).val();
+        let username = $( '#username' ).val();
         $( '#username' ).val('');
         if (username != "") {
           login(username);
         }
-      })
+      });
 
       function login(username) {
         const socket = io();
         $( '#bottom' ).empty();
-        $( '#bottom' ).append($inputs);
+        $( '#bottom' ).append($input_forms);
+        socket.emit('login', username);
 
-        socket.on('connect', function() {
-          let socket_id = socket.id;
-
-          socket.emit('login', {
-            'username':username,
-            'socket_id':socket_id
+        $( '#message_form' ).submit(function(e) {
+          e.preventDefault();
+          socket.emit('chat message', {
+            'message':$( '#message' ).val(),
+            'user':$('#user').val(),
           });
-          
-          $( '#message_form' ).submit(function(e) {
-            e.preventDefault();
-            socket.emit('chat message', {
-              'message':$( '#message' ).val(),
-              'user':$('#user').val(),
-              'socket_id':socket_id,
-            });
-            $( '#message' ).val('');
-          });
-
-          $( '#room_form' ).submit(function(e) {
-            e.preventDefault();
-            let room = $( '#room' ).val();
-            let password = $( '#password' ).val();
-            socket.emit('join room', {
-              'name':room,
-              'password':password,
-              'socket_id':socket_id
-            });
-            $( '#room' ).val('');
-            $( '#password' ).val('');
-          });
-
-          $( '#kick_form').submit(function(e) {
-            e.preventDefault();
-            socket.emit('kick user', {
-              'socket_id':socket.id,
-              'user':$('#username').val()
-            });
-          });
-
-          $( '#ban_form').submit(function(e) {
-            e.preventDefault();
-            socket.emit('ban user', {
-              'socket_id':socket.id,
-              'user':$('#ban_user').val()
-            });
-          });
-
-          $( '#delete' ).click(function(e) {
-            e.preventDefault();
-              socket.emit('delete room', {
-                "socket_id":socket.id
-              });
-          });
-
-          socket.on('message', function(message) {
-            $( '#messages' ).append($('<li>').text(message));
-          });
-
-          socket.on('delete room', function() {
-            let message = "You have been returned to the default room";
-            $( '#messages' ).empty();
-            $( '#messages' ).append($('<li>').text(message));
-            socket.emit('join room', {
-              'name':'default',
-              'password':'',
-              'socket_id':socket.id
-            });
-          });
-
-          socket.on('join room', function(join) {
-            if (join.success) {
-              $( '#messages' ).empty();
-            }
-            $( '#messages' ).append($('<li>').text(join.message));
-          });
-
-          socket.on('kicked', function(kicked){
-            socket.emit('join room', {
-              'name':'default',
-              'password':'',
-              'socket_id':socket.id
-            });
-            //console.log(socket.id);
-            $( '#messages' ).append($('<li>').text(kicked.message));
-          });
-
+          $( '#message' ).val('');
         });
- 
 
+        $( '#room_form' ).submit(function(e) {
+          e.preventDefault();
+          let room = $( '#room' ).val();
+          let password = $( '#password' ).val();
+          socket.emit('join room', {
+            'name':room,
+            'password':password
+          });
+          $( '#room' ).val('');
+          $( '#password' ).val('');
+        });
+
+        $( '#kick_form').submit(function(e) {
+          e.preventDefault();
+          socket.emit('kick user', {
+            'user':$('#username').val()
+          });
+        });
+
+        $( '#ban_form').submit(function(e) {
+          e.preventDefault();
+          socket.emit('ban user', {
+            'user':$('#ban_user').val()
+          });
+        });
+
+        $( '#delete' ).click(function(e) {
+          e.preventDefault();
+            socket.emit('delete room');
+        });
+
+        socket.on('message', function(message) {
+          $( '#messages' ).append($('<li>').text(message));
+        });
+
+        socket.on('delete room', function() {
+          let message = "You have been returned to the default room";
+          $( '#messages' ).empty();
+          $( '#messages' ).append($('<li>').text(message));
+          socket.emit('join room', {
+            'name':'default',
+            'password':''
+          });
+        });
+
+        socket.on('join room', function(join) {
+          if (join.success) {
+            $( '#messages' ).empty();
+            $( '#owner_forms' ).remove();
+            if (join.is_owner) {
+              $( '#bottom' ).append($owner_forms);
+            }
+          }
+          $( '#messages' ).append($('<li>').text(join.message));
+        });
+
+        socket.on('kicked', function(kicked){
+          socket.emit('join room', {
+            'name':'default',
+            'password':''
+          });
+          $( '#messages' ).append($('<li>').text(kicked.message));
+        });
       }
     </script>
   </body>

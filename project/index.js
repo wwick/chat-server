@@ -19,8 +19,8 @@ app.get('/', function(req, res){
 io.on('connection', function(socket) {
 
   socket.on('chat message', function(msg) {
-    let room_name = users_list[msg.socket_id].room;
-    let username = users_list[msg.socket_id].username;
+    let room_name = users_list[socket.id].room;
+    let username = users_list[socket.id].username;
     let toUser = "";
     if (msg.user != ""){
       for (var ids in users_list){
@@ -36,18 +36,18 @@ io.on('connection', function(socket) {
   }
   });
 
-  socket.on('login', function(credentials) {
-    users_list[credentials.socket_id] = {
-      'username':credentials.username
+  socket.on('login', function(username) {
+    users_list[socket.id] = {
+      'username':username
     };
     joinRoom({
       'name':'default',
-      'socket_id':credentials.socket_id
+      'socket_id':socket.id
     });
   });
 
   function joinRoom(room) {
-    let username = users_list[room.socket_id].username;
+    let username = users_list[socket.id].username;
     let message = username + " has joined the room";
     io.to(room.name).emit('message', message);
     let members = "(nobody)";
@@ -58,26 +58,28 @@ io.on('connection', function(socket) {
         members += ", " + users_list[room_users[i]].username;
       }
     }
-    rooms[room.name].users.push(room.socket_id);
+    rooms[room.name].users.push(socket.id);
     message = room.name + " currently contains: " + members;
-    io.to(room.socket_id).emit('join room', {
+    let is_owner = (rooms[room.name].owner == socket.id);
+    io.to(socket.id).emit('join room', {
       'success':true,
-      'message':message
+      'message':message,
+      'is_owner':is_owner
     });
     socket.join(room.name);
-    users_list[room.socket_id].room = room.name;
+    users_list[socket.id].room = room.name;
   }
 
   function leaveRoom(room) {
-    let former_room = users_list[room.socket_id].room;
+    let former_room = users_list[socket.id].room;
     socket.leave(former_room);
     for (i=0; i<rooms[former_room].users.length; i++) {
-      if (rooms[former_room].users[i] == room.socket_id) {
+      if (rooms[former_room].users[i] == socket.id) {
         rooms[former_room].users.splice(i,1);
         continue;
       }
     }
-    let username = users_list[room.socket_id].username;
+    let username = users_list[socket.id].username;
     let message = username + ' has left the room';
     io.to(former_room).emit('message', message);
   }
@@ -89,7 +91,7 @@ io.on('connection', function(socket) {
       rooms[room.name] = {
         'password':room.password,
         'users':Array(),
-        'owner':room.socket_id,
+        'owner':socket.id,
         'banned':Array()
       };
       leaveRoom(room);
@@ -98,39 +100,35 @@ io.on('connection', function(socket) {
     } else {
       let banned = false;
       if (rooms[room.name].password == room.password) {
-        console.log(room.name);
-        console.log(rooms[room.name].banned);
         for (ids in rooms[room.name].banned){
-          console.log(ids);
-          if(rooms[room.name].banned[ids] == room.socket_id){
+          if(rooms[room.name].banned[ids] == socket.id){
             banned = true;
           }
         }
-        if (!banned/*rooms[room.name].banned.includes[room.socket_id]*/) {
+        if (!banned/*rooms[room.name].banned.includes[socket.id]*/) {
           leaveRoom(room);
           joinRoom(room);
           return false;
         }
       }
-      io.to(room.socket_id).emit('join room', {
+      io.to(socket.id).emit('join room', {
         'success':false,
         'message':'failed to join ' + room.name
       });
-      console.log(room.password);
 
     }
   });
 
-  socket.on('delete room', function(room){
-    let currentRoom = users_list[room.socket_id].room;
-    if (rooms[currentRoom].owner == room.socket_id){
+  socket.on('delete room', function() {
+    let currentRoom = users_list[socket.id].room;
+    if (rooms[currentRoom].owner == socket.id){
       io.to(currentRoom).emit('delete room');
     }
   });
 
   socket.on('kick user', function(room){
-    let currentRoom = users_list[room.socket_id].room;
-    if (rooms[currentRoom].owner == room.socket_id){
+    let currentRoom = users_list[socket.id].room;
+    if (rooms[currentRoom].owner == socket.id){
     currentUsers = rooms[currentRoom].users;
     for (let i = 0; i < currentUsers.length; i++){
       if(users_list[currentUsers[i]].username == room.user){
@@ -145,9 +143,9 @@ io.on('connection', function(socket) {
   });
 
   socket.on('ban user', function(room){
-    let currentRoom = users_list[room.socket_id].room;
-    if (rooms[currentRoom].owner == room.socket_id){
-      currentUsers = rooms[currentRoom].users;
+    let currentRoom = users_list[socket.id].room;
+    if (rooms[currentRoom].owner == socket.id){
+      let currentUsers = rooms[currentRoom].users;
       for (let i = 0; i < currentUsers.length; i++){
         if(users_list[currentUsers[i]].username == room.user){
           kicked_user = currentUsers[i];
