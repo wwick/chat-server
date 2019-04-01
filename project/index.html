@@ -135,9 +135,9 @@
 
           $( '#kick_form').submit(function(e) {
             e.preventDefault();
-            socket.emit('kick_user', {
+            socket.emit('kick user', {
               'owner':socket_id,
-              'user':$('username').val()
+              'user':$('#username').val()
             });
           });
 
@@ -168,6 +168,16 @@
               $( '#messages' ).empty();
             }
             $( '#messages' ).append($('<li>').text(join.message));
+          });
+
+          socket.on('kicked', function(kicked){
+            socket.emit('join room', {
+              'name':'default',
+              'password':'',
+              'socket_id':socket.id
+            });
+            //console.log(socket.id);
+            //$( '#messages' ).append($('<li>').text(kicked.message));
           });
 
         });

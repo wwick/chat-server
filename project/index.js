@@ -109,19 +109,17 @@ io.on('connection', function(socket) {
   });
 
   socket.on('kick user', function(room){
-    for (i = 0; i < rooms.length; i++){
-      if(rooms[i].name == room.name) {
-        if (rooms[i].owner != room.socket_id){
-          return false;
-        } else {
-          io.emit('kick user', {
-            'room':room.name,
-            'user':room.user
-          });
-          console.log("success");
-        }
+    let currentRoom = users_list[room.owner].room;
+    currentUsers = rooms[currentRoom].users;
+    for (let i = 0; i < currentUsers.length; i++){
+      if(users_list[currentUsers[i]].username == room.user){
+        kicked_user = currentUsers[i];
       }
     }
+    let message = "You have been kicked from the room";
+    io.to(kicked_user).emit('kicked', {
+      'message': "You have been kicked from the room"
+    }); 
   });
 
 
