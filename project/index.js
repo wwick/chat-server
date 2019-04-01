@@ -90,14 +90,23 @@ io.on('connection', function(socket) {
         'password':room.password,
         'users':Array(),
         'owner':room.socket_id,
-        'banned':''
+        'banned':Array()
       };
       leaveRoom(room);
       joinRoom(room);
       
     } else {
+      let banned = false;
       if (rooms[room.name].password == room.password) {
-        if (!rooms[room.name].banned.includes[room.socket_id]) {
+        console.log(room.name);
+        console.log(rooms[room.name].banned);
+        for (ids in rooms[room.name].banned){
+          console.log(ids);
+          if(rooms[room.name].banned[ids] == room.socket_id){
+            banned = true;
+          }
+        }
+        if (!banned/*rooms[room.name].banned.includes[room.socket_id]*/) {
           leaveRoom(room);
           joinRoom(room);
           return false;
@@ -133,6 +142,23 @@ io.on('connection', function(socket) {
       'message': "You have been kicked from the room"
     }); 
   }
+  });
+
+  socket.on('ban user', function(room){
+    let currentRoom = users_list[room.socket_id].room;
+    if (rooms[currentRoom].owner == room.socket_id){
+      currentUsers = rooms[currentRoom].users;
+      for (let i = 0; i < currentUsers.length; i++){
+        if(users_list[currentUsers[i]].username == room.user){
+          kicked_user = currentUsers[i];
+          rooms[currentRoom].banned.push(currentUsers[i]);
+        }
+      }
+      let message = "You have been banned from the room";
+      io.to(kicked_user).emit('kicked', {
+        'message': message
+      });
+    }
   });
 
 

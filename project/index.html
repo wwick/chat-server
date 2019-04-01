@@ -81,11 +81,17 @@
       $kick_form.append($("<input>", {type:'text', id:'username'}));
       $kick_form.append($("<button>", {text:"Kick User"}));
 
+      let $ban_form = $("<form>", {id:'ban_form'});
+      $ban_form.append($("<label>", {text:"Ban User: ", for: "ban_user"}));
+      $ban_form.append($("<input>", {type:'text', id:'ban_user'}));
+      $ban_form.append($("<button>", {text:"Ban User"}));
+
       let $delete = $("<button>", {id:'delete',text:'Delete Room'});
       
       $inputs.append($message_form);
       $inputs.append($room_form);
       $inputs.append($kick_form);
+      $inputs.append($ban_form);
       $inputs.append($delete);
 
       let username = "";
@@ -141,6 +147,14 @@
             socket.emit('kick user', {
               'socket_id':socket.id,
               'user':$('#username').val()
+            });
+          });
+
+          $( '#ban_form').submit(function(e) {
+            e.preventDefault();
+            socket.emit('ban user', {
+              'socket_id':socket.id,
+              'user':$('#ban_user').val()
             });
           });
 
