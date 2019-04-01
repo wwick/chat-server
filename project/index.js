@@ -26,7 +26,7 @@ io.on('connection', function(socket) {
       for (var ids in users_list){
         if(users_list[ids].username == msg.user){
           toUser = ids;
-      }
+        }
     }
     let message = "PM from " + username +": "+ msg.message;
     io.to(toUser).emit("message", message);
@@ -36,7 +36,22 @@ io.on('connection', function(socket) {
   }
   });
 
+  function findValidUsername(username) {
+    for (let socket_id in users_list) {
+      if (users_list[socket_id].username == username) {
+        if (Math.random() < 0.5) {
+          username += "69";
+        } else {
+          username += "420";
+        }
+        continue;
+      }
+    }
+    return(username);
+  }
+
   socket.on('login', function(username) {
+    username = findValidUsername(username);
     users_list[socket.id] = {
       'username':username
     };
@@ -128,7 +143,6 @@ io.on('connection', function(socket) {
 
   socket.on('kick user', function(room){
     let currentRoom = users_list[socket.id].room;
-    if (rooms[currentRoom].owner == socket.id){
     currentUsers = rooms[currentRoom].users;
     for (let i = 0; i < currentUsers.length; i++){
       if(users_list[currentUsers[i]].username == room.user){
@@ -137,26 +151,25 @@ io.on('connection', function(socket) {
     }
     let message = "You have been kicked from the room";
     io.to(kicked_user).emit('kicked', {
-      'message': "You have been kicked from the room"
+      'message': message,
+      'user':room.user
     }); 
-  }
   });
 
   socket.on('ban user', function(room){
     let currentRoom = users_list[socket.id].room;
-    if (rooms[currentRoom].owner == socket.id){
-      let currentUsers = rooms[currentRoom].users;
-      for (let i = 0; i < currentUsers.length; i++){
-        if(users_list[currentUsers[i]].username == room.user){
-          kicked_user = currentUsers[i];
-          rooms[currentRoom].banned.push(currentUsers[i]);
-        }
+    let currentUsers = rooms[currentRoom].users;
+    for (let i = 0; i < currentUsers.length; i++){
+      if(users_list[currentUsers[i]].username == room.user){
+        kicked_user = currentUsers[i];
+        rooms[currentRoom].banned.push(currentUsers[i]);
       }
-      let message = "You have been banned from the room";
-      io.to(kicked_user).emit('kicked', {
-        'message': message
-      });
     }
+    let message = "You have been banned from the room";
+    io.to(kicked_user).emit('kicked', {
+      'message': message,
+      'user':room.user
+    });
   });
 
 

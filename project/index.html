@@ -60,8 +60,8 @@
 
     <script>
 
-      let $input_forms = $("<div>");
-      let $owner_forms = $("<div>");
+      let $input_forms = $("<div>", {id:'input_forms'});
+      let $owner_forms = $("<div>", {id:'owner_forms'});
 
       let $message_form = $("<form>", {id:'message_form'});
       $message_form.append($("<label>", {text: "Chat: ", for: "message"}))
@@ -131,42 +131,26 @@
           $( '#password' ).val('');
         });
 
-        function kick() {
+        function kick(e) {
+          e.preventDefault();
           socket.emit('kick user', {
             'user':$('#kick_user').val()
           });
           $('#kick_user').val('');
         }
 
-        function ban() {
+        function ban(e) {
+          e.preventDefault();
           socket.emit('ban user', {
             'user':$('#ban_user').val()
           });
           $('#ban_user').val('');
         }
 
-        function deleteRoom() {
+        function deleteRoom(e) {
+          e.preventDefault();
           socket.emit('delete room');
         }
-
-        // $( '#kick_form').submit(function(e) {
-        //   e.preventDefault();
-        //   socket.emit('kick user', {
-        //     'user':$('#username').val()
-        //   });
-        // });
-
-        // $( '#ban_form').submit(function(e) {
-        //   e.preventDefault();
-        //   socket.emit('ban user', {
-        //     'user':$('#ban_user').val()
-        //   });
-        // });
-
-        // $( '#delete' ).click(function(e) {
-        //   e.preventDefault();
-        //   socket.emit('delete room');
-        // });
 
         socket.on('message', function(message) {
           $( '#messages' ).append($('<li>').text(message));
@@ -185,6 +169,7 @@
         socket.on('join room', function(join) {
           if (join.success) {
             $( '#messages' ).empty();
+            console.log('first');
             $( '#owner_forms' ).remove();
             if (join.is_owner) {
               $( '#bottom' ).append($owner_forms);
@@ -201,7 +186,12 @@
             'name':'default',
             'password':''
           });
-          $( '#messages' ).append($('<li>').text(kicked.message));
+          console.log('second');
+          // $( '#messages' ).append($('<li>').text(kicked.message));
+          socket.emit('chat message', {
+            'message':kicked.message,
+            'user':kicked.user
+          });
         });
       }
     </script>
