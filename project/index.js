@@ -6,7 +6,7 @@ let rooms = {
     'users':Array(),
     'owner':'',
     'password':'',
-    'banned':''
+    'banned':Array()
   } 
 };
 let users_list = {};
@@ -21,8 +21,19 @@ io.on('connection', function(socket) {
   socket.on('chat message', function(msg) {
     let room_name = users_list[msg.socket_id].room;
     let username = users_list[msg.socket_id].username;
+    let toUser = "";
+    if (msg.user != ""){
+      for (var ids in users_list){
+        if(users_list[ids].username == msg.user){
+          toUser = ids;
+      }
+    }
+    let message = "PM from " + username +": "+ msg.message;
+    io.to(toUser).emit("message", message);
+  } else{
     let message = username + ": " + msg.message;
     io.to(room_name).emit('message', message);
+  }
   });
 
   socket.on('login', function(credentials) {
@@ -109,7 +120,8 @@ io.on('connection', function(socket) {
   });
 
   socket.on('kick user', function(room){
-    let currentRoom = users_list[room.owner].room;
+    let currentRoom = users_list[room.socket_id].room;
+    if (rooms[currentRoom].owner == room.socket_id){
     currentUsers = rooms[currentRoom].users;
     for (let i = 0; i < currentUsers.length; i++){
       if(users_list[currentUsers[i]].username == room.user){
@@ -120,6 +132,7 @@ io.on('connection', function(socket) {
     io.to(kicked_user).emit('kicked', {
       'message': "You have been kicked from the room"
     }); 
+  }
   });
 
 

@@ -65,6 +65,8 @@
       let $message_form = $("<form>", {id:'message_form'});
       $message_form.append($("<label>", {text: "Chat: ", for: "message"}))
       $message_form.append($("<input>", {type:'text', id:'message'}));
+      $message_form.append($("<label>", {text: "User: ", for: "user"}));
+      $message_form.append($("<input>", {type:"text", id:"user"}));
       $message_form.append($("<button>", {text:'Enter'}));
 
       let $room_form = $("<form>", {id:'room_form'});
@@ -115,6 +117,7 @@
             e.preventDefault();
             socket.emit('chat message', {
               'message':$( '#message' ).val(),
+              'user':$('#user').val(),
               'socket_id':socket_id,
             });
             $( '#message' ).val('');
@@ -136,7 +139,7 @@
           $( '#kick_form').submit(function(e) {
             e.preventDefault();
             socket.emit('kick user', {
-              'owner':socket_id,
+              'socket_id':socket.id,
               'user':$('#username').val()
             });
           });
