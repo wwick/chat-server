@@ -28,9 +28,15 @@ io.on('connection', function(socket) {
           toUser = ids;
         }
     }
+    if(msg.message.charAt(0) == "!"){
+      msg.message = emote(msg.message);
+    }
     let message = "PM from " + username +": "+ msg.message;
     io.to(toUser).emit("message", message);
   } else{
+    if(msg.message.charAt(0) == "!"){
+      msg.message = emote(msg.message);
+    }
     let message = username + ": " + msg.message;
     io.to(room_name).emit('message', message);
   }
@@ -99,6 +105,23 @@ io.on('connection', function(socket) {
     io.to(former_room).emit('message', message);
   }
 
+  function emote(msg) {
+    if (msg.substring(0,6) == "!shrug"){
+      msg = "¯\\_(ツ)_/¯ " + msg.substring(6);
+    } else if (msg.substring(0,6) == "!lenny"){
+      msg = "( ͡° ͜ʖ ͡°) " + msg.substring(6);
+    } else if (msg.substring(0,5) == "!rage"){
+      msg = "(ノಠ益ಠ)ノ彡┻━┻ " + msg.substring(5);
+    } else if (msg.substring(0,9) == "!confused"){
+      msg = "(⊙.☉)7 " + msg.substring(9);
+    } else if (msg.substring(0,4) == "!lol"){
+      msg = "(^_^)v " + msg.substring(4);
+    } else if (msg.substring(0,4) == "!sad"){
+      msg = "(T_T) " + msg.substring(5);
+    }
+    return msg;
+  }
+
 
   socket.on('join room', function(room) {
 
@@ -143,6 +166,7 @@ io.on('connection', function(socket) {
 
   socket.on('kick user', function(room){
     let currentRoom = users_list[socket.id].room;
+    let currentUser = users_list[socket.id].username;
     currentUsers = rooms[currentRoom].users;
     for (let i = 0; i < currentUsers.length; i++){
       if(users_list[currentUsers[i]].username == room.user){
@@ -168,7 +192,7 @@ io.on('connection', function(socket) {
     let message = "You have been banned from the room";
     io.to(kicked_user).emit('kicked', {
       'message': message,
-      'user':room.user
+      'user':currentUser
     });
   });
 
