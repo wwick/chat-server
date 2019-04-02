@@ -27,7 +27,7 @@ io.on('connection', function(socket) {
     let username = users_list[socket.id].username;
     let toUser = "";
     if (msg.user != ""){
-      for (var ids in users_list){
+      for (let ids in users_list){
         if (users_list[ids].username == msg.user) {
           toUser = ids;
         }
@@ -99,16 +99,18 @@ io.on('connection', function(socket) {
   // leaves room and notifies other users
   function leaveRoom(room) {
     let former_room = users_list[socket.id].room;
-    socket.leave(former_room);
-    for (i=0; i<rooms[former_room].users.length; i++) {
-      if (rooms[former_room].users[i] == socket.id) {
-        rooms[former_room].users.splice(i,1);
-        continue;
+    if (rooms[former_room] != null) {
+      socket.leave(former_room);
+      for (i=0; i<rooms[former_room].users.length; i++) {
+        if (rooms[former_room].users[i] == socket.id) {
+          rooms[former_room].users.splice(i,1);
+          continue;
+        }
       }
+      let username = users_list[socket.id].username;
+      let message = username + ' has left the room';
+      io.to(former_room).emit('message', message);
     }
-    let username = users_list[socket.id].username;
-    let message = username + ' has left the room';
-    io.to(former_room).emit('message', message);
   }
 
   // emoji support
@@ -143,8 +145,8 @@ io.on('connection', function(socket) {
     } else {
       let banned = false;
       if (rooms[room.name].password == room.password) {
-        for (ids in rooms[room.name].banned){
-          if(rooms[room.name].banned[ids] == socket.id){
+        for (let ids in rooms[room.name].banned){
+          if (rooms[room.name].banned[ids] == socket.id) {
             banned = true;
           }
         }
@@ -161,18 +163,16 @@ io.on('connection', function(socket) {
     }
   });
 
-  // deletes rooms
+  // deletes room
   socket.on('delete room', function() {
     let currentRoom = users_list[socket.id].room;
-    if (rooms[currentRoom].owner == socket.id){
-      io.to(currentRoom).emit('delete room');
-    }
+    io.to(currentRoom).emit('delete room');
+    delete rooms[currentRoom];
   });
 
   // kicks user
   socket.on('kick user', function(room){
     let currentRoom = users_list[socket.id].room;
-    let currentUser = users_list[socket.id].username;
     currentUsers = rooms[currentRoom].users;
     for (let i = 0; i < currentUsers.length; i++){
       if(users_list[currentUsers[i]].username == room.user){
