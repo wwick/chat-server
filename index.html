@@ -1,0 +1,216 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Chat Room</title>
+
+    <!-- largely from https://socket.io/get-started/chat/ -->
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font: 12pt Helvetica, Arial;
+        }
+        #bottom {
+          background: #000;
+          padding: 3px;
+          position: fixed;
+          bottom: 0;
+          width: 100%;
+        }
+        input {
+          border: 0;
+          padding: 10px;
+          margin: 10px;
+          border: 1px solid black;
+        }
+        button {
+          background: rgb(130, 224, 255);
+          border: none; 
+          padding: 14px 16px; 
+          cursor: pointer;
+        }
+        label { 
+          color:white; 
+          padding: 6px
+        }
+        #messages {
+          list-style-type: none;
+          margin: 0;
+          padding: 0;
+        }
+        #messages li {
+          padding: 5px 10px;
+        }
+        #messages li:nth-child(odd) {
+          background: #eee; 
+        }
+      </style>
+
+    <!-- jquery and socket.io libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> 
+    <script src="/socket.io/socket.io.js"></script>
+
+  </head>
+  <body>
+
+    <!-- login page -->
+    <ul id="messages"></ul>
+    <div id='bottom'>
+      <form id='login'>
+        <label for="username">Username: </label>
+        <input type="text" id="username"/><button>Login</button>
+      </form>
+    </div>
+
+    <script>
+
+      // buttons visible to everyone once logged in
+      let $input_forms = $("<div>", {id:'input_forms'});
+        
+      let $message_form = $("<form>", {id:'message_form'});
+      $message_form.append($("<label>", {text: "Chat: ", for: "message"}))
+      $message_form.append($("<input>", {type:'text', id:'message'}));
+      $message_form.append($("<label>", {text: "User (private message): ", for: "user"}));
+      $message_form.append($("<input>", {type:"text", id:"user"}));
+      $message_form.append($("<button>", {text:'Enter'}));
+
+      let $room_form = $("<form>", {id:'room_form'});
+      $room_form.append($("<label>", {text:'Room Name: ', for:'room'}));
+      $room_form.append($("<input>", {type:'text', id:'room'}));
+      $room_form.append($("<label>", {text:'Room Password: ', for:'password'}));
+      $room_form.append($("<input>", {type:'password', id:'password'}));
+      $room_form.append($("<button>", {text:'Join/Create Room'}));
+
+      $input_forms.append($message_form);
+      $input_forms.append($room_form);
+
+      // buttons visible only to the owner of a room
+      let $owner_forms = $("<div>", {id:'owner_forms'});
+
+      let $kick_form = $("<form>", {id:'kick_form'});
+      $kick_form.append($("<label>", {text:"Kick User: ", for: "kick_user"}));
+      $kick_form.append($("<input>", {type:'text', id:'kick_user'}));
+      $kick_form.append($("<button>", {text:"Kick User"}));
+
+      let $ban_form = $("<form>", {id:'ban_form'});
+      $ban_form.append($("<label>", {text:"Ban User: ", for: "ban_user"}));
+      $ban_form.append($("<input>", {type:'text', id:'ban_user'}));
+      $ban_form.append($("<button>", {text:"Ban User"}));
+
+      let $delete = $("<button>", {id:'delete',text:'Delete Room'});
+
+      $owner_forms.append($kick_form);
+      $owner_forms.append($ban_form);
+      $owner_forms.append($delete);
+
+      // logs in when a user presses the login button
+      $( "#login" ).submit(function(e) {
+        e.preventDefault();
+        let username = $( '#username' ).val();
+        $( '#username' ).val('');
+        if (username != "") {
+          login(username);
+        }
+      });
+
+      // connects to server and attaches event listeners
+      function login(username) {
+        const socket = io();
+        $( '#bottom' ).empty();
+        $( '#bottom' ).append($input_forms);
+        socket.emit('login', username);
+
+        // writes a message to a room or another user
+        $( '#message_form' ).submit(function(e) {
+          e.preventDefault();
+          socket.emit('chat message', {
+            'message':$( '#message' ).val(),
+            'user':$('#user').val(),
+          });
+          $( '#message' ).val('');
+          $( '#user' ).val('');
+        });
+
+        // joins a new room
+        $( '#room_form' ).submit(function(e) {
+          e.preventDefault();
+          let room = $( '#room' ).val();
+          let password = $( '#password' ).val();
+          socket.emit('join room', {
+            'name':room,
+            'password':password
+          });
+          $( '#room' ).val('');
+          $( '#password' ).val('');
+        });
+
+        // kicks a user
+        function kick(e) {
+          e.preventDefault();
+          socket.emit('kick user', {
+            'user':$('#kick_user').val()
+          });
+          $('#kick_user').val('');
+        }
+
+        // bans a user
+        function ban(e) {
+          e.preventDefault();
+          socket.emit('ban user', {
+            'user':$('#ban_user').val()
+          });
+          $('#ban_user').val('');
+        }
+
+        // deletes a room
+        function deleteRoom(e) {
+          e.preventDefault();
+          socket.emit('delete room');
+        }
+
+        // adds a message to the page
+        socket.on('message', function(message) {
+          $( '#messages' ).append($('<li>').text(message));
+        });
+
+        // returns user to default room when room has been deleted
+        socket.on('delete room', function() {
+          let message = "You have been returned to the default room";
+          $( '#messages' ).empty();
+          $( '#messages' ).append($('<li>').text(message));
+          socket.emit('join room', {
+            'name':'default',
+            'password':''
+          });
+        });
+
+        // joins a room
+        socket.on('join room', function(join) {
+          if (join.success) {
+            $( '#messages' ).empty();
+            $( '#owner_forms' ).remove();
+            if (join.is_owner) {
+              $( '#bottom' ).append($owner_forms);
+              $( '#kick_form').submit(kick);
+              $( '#ban_form').submit(ban);
+              $( '#delete' ).click(deleteRoom);
+            }
+          }
+          $( '#messages' ).append($('<li>').text(join.message));
+        });
+
+        // reacts when you are kicked
+        socket.on('kicked', function(kicked){
+          socket.emit('join room', {
+            'name':'default',
+            'password':''
+          });
+          socket.emit('chat message', {
+            'message':kicked.message,
+            'user':kicked.user
+          });
+        });
+
+      }
+    </script>
+  </body>
+</html>
