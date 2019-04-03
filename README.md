@@ -29,3 +29,4 @@ Use ```node index.js``` to start server. Navigate to http://localhost:3456
 
 * the owner of a chat room can delete the room
 * type "!shrug", "!lenny", "!rage", "!confused", "!lol", or "!sad" at the beginning of a message will result in that emoji being displayed
+* if a username is already taken a random number is appended to the end of it
