@@ -199,7 +199,7 @@ io.on('connection', function(socket) {
     let message = "You have been banned from the room";
     io.to(kicked_user).emit('kicked', {
       'message': message,
-      'user':currentUser
+      'user':room.user
     });
   });
 });
