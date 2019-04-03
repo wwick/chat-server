@@ -35,10 +35,14 @@ io.on('connection', function(socket) {
       if (msg.message.charAt(0) == "!") {
         msg.message = emote(msg.message);
       }
-      let message = "PM from " + username + ": " + msg.message;
-      io.to(toUser).emit("message", message);
-      message = "PM to " + msg.user + ": " + msg.message;
+      
+      let message = "PM to " + msg.user + ": " + msg.message;
       io.to(socket.id).emit("message", message);
+      if (socket.id != toUser) {
+        message = "PM from " + username + ": " + msg.message;
+        io.to(toUser).emit("message", message);
+      }
+      
     } else {
       if (msg.message.charAt(0) == "!") {
         msg.message = emote(msg.message);
