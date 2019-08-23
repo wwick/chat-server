@@ -1,7 +1,5 @@
 # Chat Server
 
-CSE 330 Module 6 Group Portion
-
 ### Prerequisites
 
 ```node``` and ```npm``` should be already installed on host computer
@@ -22,8 +20,8 @@ Use ```node index.js``` to start server. Navigate to http://localhost:3456
 
 ## Authors
 
-* **Elijah Pena (455281)**
-* **Will Wick (467000)**
+* **Elijah Pena **
+* **Will Wick **
 
 ## Creative Portion
 
