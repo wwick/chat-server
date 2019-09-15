@@ -1,5 +1,7 @@
 # Chat Server
 
+Multi-room chat server allows users to create rooms for others to join. Creators of a room can kick or ban other users from their room.
+
 ### Prerequisites
 
 ```node``` and ```npm``` should be already installed on host computer
