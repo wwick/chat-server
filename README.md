@@ -18,11 +18,6 @@ Use ```node index.js``` to start server. Navigate to http://localhost:3456
 * Socket.io
 * Express
 
-## Authors
-
-* **Elijah Pena **
-* **Will Wick **
-
 ## Creative Portion
 
 * the owner of a chat room can delete the room
