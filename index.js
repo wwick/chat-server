@@ -7,10 +7,11 @@ let rooms = {
     'users':Array(),
     'owner':'',
     'password':'',
-    'banned':Array()
+    'banned':Set()
   } 
 };
 let users_list = {};
+let username_map = {};
 const port = 3456;
 
 // sends html to users
@@ -27,10 +28,8 @@ io.on('connection', function(socket) {
     let username = users_list[socket.id].username;
     let toUser = "";
     if (msg.user != ""){
-      for (let ids in users_list){
-        if (users_list[ids].username == msg.user) {
-          toUser = ids;
-        }
+      if (username_map.hasOwnProperty(username)) {
+        toUser = username_map[username];
       }
       if (msg.message.charAt(0) == "!") {
         msg.message = emote(msg.message);
@@ -68,6 +67,9 @@ io.on('connection', function(socket) {
     username = findValidUsername(username);
     users_list[socket.id] = {
       'username':username
+    };
+    username_map[username] = {
+      'id':socket.id
     };
     joinRoom({
       'name':'default',
@@ -142,19 +144,13 @@ io.on('connection', function(socket) {
         'password':room.password,
         'users':Array(),
         'owner':socket.id,
-        'banned':Array()
+        'banned':Set()
       };
       leaveRoom(room);
       joinRoom(room);
     } else {
-      let banned = false;
       if (rooms[room.name].password == room.password) {
-        for (let ids in rooms[room.name].banned){
-          if (rooms[room.name].banned[ids] == socket.id) {
-            banned = true;
-          }
-        }
-        if (!banned) {
+        if (!rooms[room.name].banned.has(socket.id)) {
           leaveRoom(room);
           joinRoom(room);
           return false;
@@ -197,7 +193,7 @@ io.on('connection', function(socket) {
     for (let i = 0; i < currentUsers.length; i++){
       if(users_list[currentUsers[i]].username == room.user){
         kicked_user = currentUsers[i];
-        rooms[currentRoom].banned.push(currentUsers[i]);
+        rooms[currentRoom].banned.add(currentUsers[i]);
       }
     }
     let message = "You have been banned from the room";
