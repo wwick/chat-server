@@ -7,7 +7,7 @@ let rooms = {
     'users':Array(),
     'owner':'',
     'password':'',
-    'banned':Set()
+    'banned':new Set()
   } 
 };
 let users_list = {};
@@ -144,7 +144,7 @@ io.on('connection', function(socket) {
         'password':room.password,
         'users':Array(),
         'owner':socket.id,
-        'banned':Set()
+        'banned':new Set()
       };
       leaveRoom(room);
       joinRoom(room);
